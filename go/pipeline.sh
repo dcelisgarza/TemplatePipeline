@@ -34,6 +34,16 @@ stage_docs() {
   publish_docs "$DOCS"
 }
 
+stage_coverage() {
+  cd "$SRC"
+  rm -rf "$COVERAGE_WORK"
+  mkdir -p "$COVERAGE_WORK/html"
+  go test -coverpkg=./... -coverprofile="$COVERAGE_WORK/coverage.out" ./...
+  go tool cover -html="$COVERAGE_WORK/coverage.out" -o "$COVERAGE_WORK/html/index.html"
+  publish_coverage "$COVERAGE_WORK/coverage.out" "$COVERAGE_WORK/html" \
+    "$(go tool cover -func="$COVERAGE_WORK/coverage.out" | awk '/^total:/ { sub("%", "", $NF); print $NF }')"
+}
+
 stage_package() {
   need go
   cd "$SRC"
@@ -56,7 +66,7 @@ stage_install() {
 }
 
 stage_clean() {
-  rm -rf "$BUILD" "$DOCS" "${DIST_DIR:?}/$NAME" "${SITE_DIR:?}/$NAME"
+  rm -rf "$BUILD" "$DOCS" "${DIST_DIR:?}/$NAME" "${COVERAGE_DIR:?}/$NAME" "${SITE_DIR:?}/$NAME"
 }
 
 run_stages "$@"

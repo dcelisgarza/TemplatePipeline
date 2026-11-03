@@ -23,6 +23,16 @@ stage_docs() {
   publish_docs "$BUILD/html"
 }
 
+stage_coverage() {
+  local cov="$SRC/build-coverage" pct
+  cmake -S "$SRC" -B "$cov" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS=--coverage
+  cmake --build "$cov" --parallel
+  find "$cov" -name '*.gcda' -delete
+  ctest --test-dir "$cov" --output-on-failure
+  pct="$(gcovr_report "$SRC" "$cov" "$cov/report" "$SRC/src/" "$SRC/app/")"
+  publish_coverage "$cov/report/coverage.xml" "$cov/report/html" "$pct"
+}
+
 stage_package() {
   need cpack
   mkdir -p "$DIST_DIR/$NAME"
@@ -40,7 +50,7 @@ stage_install() {
 }
 
 stage_clean() {
-  rm -rf "$BUILD" "${DIST_DIR:?}/$NAME" "${SITE_DIR:?}/$NAME"
+  rm -rf "$BUILD" "$SRC/build-coverage" "${DIST_DIR:?}/$NAME" "${COVERAGE_DIR:?}/$NAME" "${SITE_DIR:?}/$NAME"
 }
 
 run_stages "$@"

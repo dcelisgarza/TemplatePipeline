@@ -9,14 +9,20 @@
 #   PREFIX    install root (default: ${TMPDIR:-/tmp}/template-pipeline)
 #   DIST_DIR  where packages and binaries go (default: <repo>/dist)
 #   SITE_DIR  where HTML documentation goes (default: <repo>/site)
+#   COVERAGE_DIR  where coverage reports go (default: <repo>/coverage)
+#   COVERAGE_MIN  fail the coverage stage below this line coverage in percent (default: 0)
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VERSION="$(tr -d '[:space:]' <"$ROOT/VERSION")"
 DIST_DIR="${DIST_DIR:-$ROOT/dist}"
 SITE_DIR="${SITE_DIR:-$ROOT/site}"
+COVERAGE_DIR="${COVERAGE_DIR:-$ROOT/coverage}"
+# The language scripts use COVERAGE_WORK as scratch space for the coverage stage.
+# shellcheck disable=SC2034
+COVERAGE_WORK="$COVERAGE_DIR/.work/${NAME:-unknown}"
 PREFIX="${PREFIX:-${TMPDIR:-/tmp}/template-pipeline}"
-STAGES=(build test docs package install)
+STAGES=(build test docs coverage package install)
 
 log() { printf '\033[1;34m==> [%s] %s\033[0m\n' "${NAME:-?}" "$*" >&2; }
 die() { printf '\033[1;31merror: [%s] %s\033[0m\n' "${NAME:-?}" "$*" >&2; exit 1; }
@@ -57,6 +63,49 @@ publish_docs() {
   mkdir -p "$SITE_DIR"
   cp -R "$1" "$SITE_DIR/$NAME"
   log "documentation in $SITE_DIR/$NAME/index.html"
+}
+
+# publish_coverage REPORT HTML_DIR PERCENT : copies the machine-readable coverage
+# REPORT (lcov, Cobertura XML or Go profile) and the HTML report in HTML_DIR to
+# $COVERAGE_DIR/$NAME, and records the line coverage PERCENT. CI uploads the
+# REPORT to Codecov. Fails if PERCENT is below COVERAGE_MIN.
+publish_coverage() {
+  local report=$1 html=$2 pct out="$COVERAGE_DIR/$NAME"
+  pct="$(printf '%.1f' "$3")"
+  [ -f "$report" ] || die "no coverage report at $report"
+  [ -f "$html/index.html" ] || die "the HTML coverage report $html has no index.html"
+  rm -rf "$out"
+  mkdir -p "$out"
+  cp "$report" "$out/"
+  cp -R "$html" "$out/html"
+  echo "$pct" >"$out/percent.txt"
+  log "line coverage: $pct%. Report: $out/html/index.html"
+  if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+    echo "**$NAME** line coverage: $pct%" >>"$GITHUB_STEP_SUMMARY"
+  fi
+  if [ -n "${GITHUB_OUTPUT:-}" ]; then
+    echo "coverage-file=$out/$(basename "$report")" >>"$GITHUB_OUTPUT"
+  fi
+  awk -v p="$pct" -v m="${COVERAGE_MIN:-0}" 'BEGIN { exit !(p + 0 >= m + 0) }' ||
+    die "line coverage $pct% is below COVERAGE_MIN=${COVERAGE_MIN}%"
+}
+
+# gcovr_report SRCDIR OBJDIR OUTDIR FILTER... : makes the reports of a gcc
+# --coverage build with gcovr (run through uvx) from SRCDIR, the directory where
+# the compiler ran. Writes OUTDIR/coverage.xml (Cobertura) and OUTDIR/html/index.html,
+# and prints the line coverage percent. Each FILTER is a source directory to include.
+gcovr_report() {
+  local src=$1 obj=$2 out=$3 summary f filters=()
+  shift 3
+  need uv
+  for f in "$@"; do filters+=(--filter "$f"); done
+  rm -rf "$out"
+  mkdir -p "$out/html"
+  summary="$(cd "$src" && uvx --quiet gcovr==8.8 --root "$src" --object-directory "$obj" "${filters[@]}" \
+    --exclude-directories ".*/CMakeFiles/[0-9.]+/.*" \
+    --cobertura "$out/coverage.xml" --html-details "$out/html/index.html" --print-summary)"
+  echo "$summary" >&2
+  sed -n 's/^lines: \([0-9.]*\)%.*/\1/p' <<<"$summary"
 }
 
 # link_bin EXE : puts a link to EXE in $PREFIX/bin.
@@ -101,9 +150,9 @@ run_stages() {
   for s in "${args[@]}"; do
     case "$s" in
       build | clean) ;;
-      test | docs | package) _run_once build ;;
+      test | docs | coverage | package) _run_once build ;;
       install) _run_once build && _run_once package ;;
-      *) die "unknown stage '$s'. Use: build test docs package install clean all" ;;
+      *) die "unknown stage '$s'. Use: build test docs coverage package install clean all" ;;
     esac
     _run_once "$s"
   done

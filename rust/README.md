@@ -6,6 +6,7 @@ The Rust version of the `shapes` program. See the [spec](../SPEC.md).
 | ------------- | ----------------------------------------- |
 | Build         | Cargo (`cargo build --release`)           |
 | Test          | `cargo test`, rustfmt, Clippy             |
+| Coverage      | cargo-llvm-cov |
 | Documentation | rustdoc (`cargo doc`)                     |
 | Package       | `.tar.gz` of the binary and a `.crate`    |
 
