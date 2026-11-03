@@ -22,6 +22,26 @@ stage_docs() {
   publish_docs "$SRC/docs/build"
 }
 
+stage_coverage() {
+  need genhtml
+  local env="$COVERAGE_WORK/env" pct
+  rm -rf "$COVERAGE_WORK"
+  find "$SRC/src" "$SRC/test" -name '*.jl.*.cov' -delete
+  jl --project="$SRC" -e 'using Pkg; Pkg.test(coverage=true)'
+  # Coverage.jl turns the .cov files next to the sources into an lcov file.
+  jl --project="$env" -e 'using Pkg; Pkg.add(name="Coverage", version="1")'
+  pct="$(cd "$SRC" && jl --project="$env" -e '
+    using Coverage
+    cov = process_folder("src")
+    LCOV.writefile(ARGS[1], cov)
+    covered, total = get_summary(cov)
+    clean_folder("src")
+    println(round(100 * covered / total; digits=1))' "$COVERAGE_WORK/lcov.info")"
+  (cd "$SRC" && genhtml --quiet "$COVERAGE_WORK/lcov.info" --output-directory "$COVERAGE_WORK/html")
+  find "$SRC/test" -name '*.jl.*.cov' -delete
+  publish_coverage "$COVERAGE_WORK/lcov.info" "$COVERAGE_WORK/html" "$pct"
+}
+
 stage_package() {
   local out="$DIST_DIR/$NAME" pkg="shapes-julia-$VERSION-src"
   rm -rf "$BUILD/package"
@@ -66,7 +86,7 @@ stage_install() {
 
 stage_clean() {
   rm -rf "$BUILD" "$SRC/docs/build" "$SRC/Manifest.toml" "$SRC/docs/Manifest.toml" \
-    "${DIST_DIR:?}/$NAME" "${SITE_DIR:?}/$NAME"
+    "${DIST_DIR:?}/$NAME" "${COVERAGE_DIR:?}/$NAME" "${SITE_DIR:?}/$NAME"
 }
 
 run_stages "$@"

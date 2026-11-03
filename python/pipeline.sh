@@ -21,6 +21,15 @@ stage_docs() {
   publish_docs docs/_build/html
 }
 
+stage_coverage() {
+  rm -rf "$COVERAGE_WORK"
+  COVERAGE_FILE="$COVERAGE_WORK/.coverage" uv run --locked pytest --cov=shapes \
+    --cov-report=term --cov-report="xml:$COVERAGE_WORK/coverage.xml" \
+    --cov-report="html:$COVERAGE_WORK/html" tests
+  publish_coverage "$COVERAGE_WORK/coverage.xml" "$COVERAGE_WORK/html" \
+    "$(COVERAGE_FILE="$COVERAGE_WORK/.coverage" uv run --locked coverage report --format=total --precision=1)"
+}
+
 stage_package() {
   uv build --out-dir "$DIST_DIR/$NAME"
 }
@@ -35,7 +44,7 @@ stage_install() {
 }
 
 stage_clean() {
-  rm -rf .venv docs/_build "${DIST_DIR:?}/$NAME" "${SITE_DIR:?}/$NAME"
+  rm -rf .venv docs/_build "${DIST_DIR:?}/$NAME" "${COVERAGE_DIR:?}/$NAME" "${SITE_DIR:?}/$NAME"
 }
 
 run_stages "$@"

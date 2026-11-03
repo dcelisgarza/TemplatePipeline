@@ -6,6 +6,7 @@ The Go version of the `shapes` program. See the [spec](../SPEC.md).
 | ------------- | ----------------------------------------- |
 | Build         | `go build`                                |
 | Test          | `go test` and `go vet`                    |
+| Coverage      | `go test -coverprofile`, `go tool cover` |
 | Documentation | doc2go (static HTML)                      |
 | Package       | release binary (`.tar.gz`)                |
 

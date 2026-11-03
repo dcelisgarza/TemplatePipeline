@@ -40,6 +40,20 @@ HTML
   publish_docs "$SRC/target/site"
 }
 
+stage_coverage() {
+  need cargo-llvm-cov
+  cd "$SRC"
+  rm -rf "$COVERAGE_WORK"
+  mkdir -p "$COVERAGE_WORK"
+  cargo llvm-cov clean --workspace
+  cargo llvm-cov --locked --no-report
+  cargo llvm-cov report --lcov --output-path "$COVERAGE_WORK/lcov.info"
+  cargo llvm-cov report --html --output-dir "$COVERAGE_WORK"
+  publish_coverage "$COVERAGE_WORK/lcov.info" "$COVERAGE_WORK/html" \
+    "$(cargo llvm-cov report --json --summary-only |
+      python3 -c 'import json, sys; print(json.load(sys.stdin)["data"][0]["totals"]["lines"]["percent"])')"
+}
+
 stage_package() {
   local out="$DIST_DIR/$NAME" stage plat
   plat="$(platform)"
@@ -64,7 +78,7 @@ stage_install() {
 }
 
 stage_clean() {
-  rm -rf "$SRC/target" "${DIST_DIR:?}/$NAME" "${SITE_DIR:?}/$NAME"
+  rm -rf "$SRC/target" "${DIST_DIR:?}/$NAME" "${COVERAGE_DIR:?}/$NAME" "${SITE_DIR:?}/$NAME"
 }
 
 run_stages "$@"

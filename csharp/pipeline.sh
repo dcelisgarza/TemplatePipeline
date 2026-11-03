@@ -40,6 +40,20 @@ stage_docs() {
   publish_docs "$DOCS"
 }
 
+stage_coverage() {
+  need dotnet
+  cd "$SRC"
+  rm -rf "$COVERAGE_WORK"
+  dotnet tool restore
+  # coverlet writes one Cobertura file per test project. ReportGenerator merges them.
+  dotnet test "$SLN" -c Release --no-build --collect:"XPlat Code Coverage" \
+    --results-directory "$COVERAGE_WORK/raw"
+  dotnet reportgenerator -reports:"$COVERAGE_WORK/raw/*/coverage.cobertura.xml" \
+    -targetdir:"$COVERAGE_WORK/html" -reporttypes:"Html;Cobertura;TextSummary"
+  publish_coverage "$COVERAGE_WORK/html/Cobertura.xml" "$COVERAGE_WORK/html" \
+    "$(sed -n 's/^ *Line coverage: *\([0-9.]*\)%.*/\1/p' "$COVERAGE_WORK/html/Summary.txt")"
+}
+
 stage_package() {
   need dotnet
   local out="$DIST_DIR/$NAME" pkg
@@ -71,7 +85,7 @@ stage_install() {
 }
 
 stage_clean() {
-  rm -rf "${PUBLISH:?}" "${DOCS:?}" "${SRC:?}/docs/api" "${DIST_DIR:?}/$NAME" "${SITE_DIR:?}/$NAME"
+  rm -rf "${PUBLISH:?}" "${DOCS:?}" "${SRC:?}/docs/api" "${DIST_DIR:?}/$NAME" "${COVERAGE_DIR:?}/$NAME" "${SITE_DIR:?}/$NAME"
   find "$SRC/src" "$SRC/tests" -type d \( -name bin -o -name obj \) -prune -exec rm -rf {} +
 }
 

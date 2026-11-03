@@ -6,6 +6,7 @@ The C++ version of the `shapes` program. See the [spec](../SPEC.md).
 | ------------- | ------------------------------ |
 | Build         | CMake (C++17)                  |
 | Test          | GoogleTest, CTest              |
+| Coverage      | gcc `--coverage`, gcovr |
 | Documentation | Doxygen (`docs` target)        |
 | Package       | CPack (`.tar.gz`)              |
 

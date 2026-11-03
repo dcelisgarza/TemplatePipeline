@@ -25,6 +25,17 @@ stage_docs() {
   publish_docs "$DOCS"
 }
 
+stage_coverage() {
+  cd "$SRC"
+  rm -rf "$COVERAGE_WORK"
+  # The tests import the compiled dist/ files. c8 uses the source maps to report on src/.
+  npx c8 --all --src src --include 'src/**' --exclude-after-remap \
+    --reporter=text --reporter=lcov --reporter=html --reporter=json-summary \
+    --report-dir "$COVERAGE_WORK" --temp-directory "$COVERAGE_WORK/tmp" npm test
+  publish_coverage "$COVERAGE_WORK/lcov.info" "$COVERAGE_WORK" \
+    "$(node -p "require('$COVERAGE_WORK/coverage-summary.json').total.lines.pct")"
+}
+
 stage_package() {
   cd "$SRC"
   mkdir -p "$DIST_DIR/$NAME"
@@ -42,7 +53,7 @@ stage_install() {
 }
 
 stage_clean() {
-  rm -rf "$BUILD" "$DOCS" "$SRC/node_modules" "${DIST_DIR:?}/$NAME" "${SITE_DIR:?}/$NAME"
+  rm -rf "$BUILD" "$DOCS" "$SRC/node_modules" "${DIST_DIR:?}/$NAME" "${COVERAGE_DIR:?}/$NAME" "${SITE_DIR:?}/$NAME"
 }
 
 run_stages "$@"

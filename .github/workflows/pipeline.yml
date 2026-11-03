@@ -45,7 +45,7 @@ jobs:
         lang: [c, cpp, python, rust, julia, fortran, typescript, go, csharp]
         os: [ubuntu-latest, macos-latest]
     env:
-      # Docs are the same on each OS, so only Linux builds them.
+      # Docs and coverage are the same on each OS, so only Linux makes them.
       STAGES: ${{ matrix.os == 'ubuntu-latest' && 'all' || 'build test package install' }}
       # The compiled Julia binary takes minutes to build and is large, so only releases make it.
       SHAPES_JULIA_BINARY: ${{ startsWith(github.ref, 'refs/tags/v') && '1' || '' }}
@@ -56,18 +56,24 @@ jobs:
       - name: Doxygen
         if: runner.os == 'Linux' && (matrix.lang == 'c' || matrix.lang == 'cpp')
         run: sudo apt-get update && sudo apt-get install -y doxygen graphviz
+      - name: lcov (genhtml for the Julia coverage report)
+        if: runner.os == 'Linux' && matrix.lang == 'julia'
+        run: sudo apt-get update && sudo apt-get install -y lcov
 
+      # uv runs gcovr for the C, C++ and Fortran coverage, and FORD for the Fortran docs.
       - uses: astral-sh/setup-uv@v10.3.3
-        if: matrix.lang == 'python' || matrix.lang == 'fortran'
+        if: contains(fromJSON('["c", "cpp", "python", "fortran"]'), matrix.lang)
 
       - uses: dtolnay/rust-toolchain@stable
         if: matrix.lang == 'rust'
         with:
-          components: clippy, rustfmt
+          components: clippy, rustfmt, llvm-tools-preview
       - uses: Swatinem/rust-cache@v2
         if: matrix.lang == 'rust'
         with:
           workspaces: rust
+      - uses: taiki-e/install-action@cargo-llvm-cov
+        if: runner.os == 'Linux' && matrix.lang == 'rust'
 
       - uses: julia-actions/setup-julia@v3
         if: matrix.lang == 'julia'
@@ -109,10 +115,22 @@ jobs:
 
       # Pipeline ---------------------------------------------------------------
       - name: Run the pipeline
+        id: pipeline
         # STAGES is a list of stage names, so the word split is intended.
         run: |
           # shellcheck disable=SC2086
           ./${{ matrix.lang }}/pipeline.sh $STAGES
+
+      # The coverage stage writes the path of its report to the step output coverage-file.
+      - uses: codecov/codecov-action@v7
+        if: runner.os == 'Linux'
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ${{ steps.pipeline.outputs.coverage-file }}
+          flags: ${{ matrix.lang }}
+          name: ${{ matrix.lang }}
+          disable_search: true
+          fail_ci_if_error: true
 
       - uses: actions/upload-artifact@v7
         with:

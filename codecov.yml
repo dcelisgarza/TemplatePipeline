@@ -1,0 +1,20 @@
+# Codecov settings. Each language job uploads its report with a flag of the same name
+# (c, cpp, python, rust, julia, fortran, typescript, go, csharp).
+coverage:
+  status:
+    # The checks report the coverage but do not fail a pull request.
+    # Set COVERAGE_MIN in the workflow for a hard limit.
+    project:
+      default:
+        informational: true
+    patch:
+      default:
+        informational: true
+
+flag_management:
+  default_rules:
+    # Keep the last report of a flag when a run does not upload it.
+    carryforward: true
+
+comment:
+  layout: "header, diff, flags, files"

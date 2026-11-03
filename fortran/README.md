@@ -6,6 +6,7 @@ The Fortran version of the `shapes` program. See the [spec](../SPEC.md).
 | ------------- | ------------------------------------- |
 | Build         | fpm (Fortran Package Manager)         |
 | Test          | test-drive (`fpm test`)               |
+| Coverage      | gfortran `--coverage`, gcovr |
 | Documentation | FORD (`uvx ford`, project `ford.md`)  |
 | Package       | `fpm install` into a folder, then tar |
 

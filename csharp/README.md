@@ -6,6 +6,7 @@ The C# version of the `shapes` program. See the [spec](../SPEC.md).
 | ------------- | ------------------------------------------------------- |
 | Build         | .NET 8 SDK, `dotnet build` (solution `Shapes.sln`)      |
 | Test          | xUnit, `dotnet test`                                    |
+| Coverage      | coverlet, ReportGenerator |
 | Documentation | docfx (local tool, see `.config/dotnet-tools.json`)     |
 | Package       | `dotnet pack` (`.nupkg`) and `dotnet publish` (binary)  |
 

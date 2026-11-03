@@ -1,10 +1,13 @@
 # Pipeline output
 /dist/
 /site/
+/coverage/
 
 # C, C++, Fortran
 c/build/
+c/build-coverage/
 cpp/build/
+cpp/build-coverage/
 fortran/build/
 
 # Python
@@ -30,3 +33,6 @@ csharp/**/obj/
 csharp/publish/
 csharp/docs/_site/
 csharp/docs/api/
+
+# Julia coverage data
+*.jl.*.cov

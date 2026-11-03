@@ -7,6 +7,7 @@ The Python version of the `shapes` program. See the [spec](../SPEC.md).
 | Project       | uv (`pyproject.toml`, `uv.lock`)        |
 | Build         | `uv build` with the `uv_build` backend  |
 | Test          | pytest, ruff                            |
+| Coverage      | pytest-cov |
 | Documentation | Sphinx with autodoc                     |
 | Package       | wheel and sdist                         |
 | Install       | `uv tool install`                       |

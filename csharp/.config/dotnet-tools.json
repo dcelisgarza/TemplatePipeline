@@ -6,8 +6,13 @@
       "version": "2.81.0",
       "commands": [
         "docfx"
-      ],
-      "rollForward": false
+      ]
+    },
+    "dotnet-reportgenerator-globaltool": {
+      "version": "5.5.12",
+      "commands": [
+        "reportgenerator"
+      ]
     }
   }
 }

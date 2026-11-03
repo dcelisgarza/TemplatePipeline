@@ -25,6 +25,15 @@ stage_docs() {
   publish_docs "$BUILD/ford"
 }
 
+stage_coverage() {
+  local pct
+  # fpm keeps a build with other flags in its own directory below build/.
+  find "$BUILD" -name '*.gcda' -delete
+  (cd "$SRC" && fpm test --profile debug --flag --coverage --link-flag --coverage)
+  pct="$(gcovr_report "$SRC" "$BUILD" "$BUILD/coverage" "$SRC/src/")"
+  publish_coverage "$BUILD/coverage/coverage.xml" "$BUILD/coverage/html" "$pct"
+}
+
 stage_package() {
   need tar
   local stage="$BUILD/package/shapes-fortran-$VERSION-$(platform)"
@@ -42,7 +51,7 @@ stage_install() {
 }
 
 stage_clean() {
-  rm -rf "$BUILD" "${DIST_DIR:?}/$NAME" "${SITE_DIR:?}/$NAME"
+  rm -rf "$BUILD" "${DIST_DIR:?}/$NAME" "${COVERAGE_DIR:?}/$NAME" "${SITE_DIR:?}/$NAME"
 }
 
 run_stages "$@"

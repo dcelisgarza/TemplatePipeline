@@ -6,11 +6,11 @@
 #   make site            make site/index.html for the documentation of all languages
 #   make clean           remove build output of all languages
 #
-# Stages: build test docs package install clean
+# Stages: build test docs coverage package install clean
 # PREFIX (default /tmp/template-pipeline) sets where 'install' puts the programs.
 
 LANGS  := c cpp python rust julia fortran typescript go csharp
-STAGES := build test docs package install clean
+STAGES := build test docs coverage package install clean
 
 .PHONY: all site clean check-versions $(LANGS) \
         $(foreach l,$(LANGS),$(foreach s,$(STAGES),$(l)-$(s)))

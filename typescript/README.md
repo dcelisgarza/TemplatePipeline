@@ -6,6 +6,7 @@ The TypeScript version of the `shapes` program. See the [spec](../SPEC.md).
 | ------------- | ------------------------------------- |
 | Build         | npm, `tsc` (ESM, output in `dist/`)   |
 | Test          | `node:test` (the built-in runner)     |
+| Coverage      | c8 |
 | Documentation | TypeDoc                               |
 | Package       | `npm pack` (`.tgz`)                   |
 

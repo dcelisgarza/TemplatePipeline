@@ -6,6 +6,7 @@ The Julia version of the `shapes` program. See the [spec](../SPEC.md).
 | ------------- | --------------------------------------------- |
 | Build         | Pkg (`instantiate`, `precompile`)             |
 | Test          | `Pkg.test()` with the Test standard library   |
+| Coverage      | `Pkg.test(coverage=true)`, Coverage.jl, genhtml |
 | Documentation | Documenter.jl (`docs/make.jl`)                |
 | Package       | Source `.tar.gz`                              |
 | Install       | Pkg Apps (`[apps.shapes-julia]`, Julia 1.12+) |
