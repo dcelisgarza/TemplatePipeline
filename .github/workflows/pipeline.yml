@@ -81,10 +81,13 @@ jobs:
         with:
           compiler: gcc
           version: 13
-      - uses: fortran-lang/setup-fpm@v10
+      # The fpm wheels on PyPI work on Linux and macOS. The setup-fpm binary for macOS
+      # needs the libgfortran of Homebrew gcc@12, which the runner does not have.
+      - name: fpm
         if: matrix.lang == 'fortran'
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          uv tool install fpm==0.12.0
+          uv tool dir --bin >> "$GITHUB_PATH"
 
       - uses: actions/setup-node@v7
         if: matrix.lang == 'typescript'
