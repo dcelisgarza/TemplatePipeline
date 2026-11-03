@@ -1,0 +1,13 @@
+<Project>
+  <!-- Shared settings. The version here must equal the VERSION file in the repo root. -->
+  <PropertyGroup>
+    <Version>0.1.0</Version>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>12.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Authors>Template Pipeline</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+</Project>

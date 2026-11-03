@@ -1,0 +1,32 @@
+# Pipeline output
+/dist/
+/site/
+
+# C, C++, Fortran
+c/build/
+cpp/build/
+fortran/build/
+
+# Python
+python/.venv/
+python/docs/_build/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# TypeScript
+typescript/node_modules/
+typescript/dist/
+typescript/docs-out/
+
+# Go
+go/bin/
+go/docs-out/
+
+# C#
+csharp/**/bin/
+csharp/**/obj/
+csharp/publish/
+csharp/docs/_site/
+csharp/docs/api/

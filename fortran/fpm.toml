@@ -1,0 +1,25 @@
+name = "shapes"
+version = "0.1.0"
+license = "MIT"
+author = "TemplatePipeline"
+description = "Area and perimeter of plane shapes"
+
+[library]
+source-dir = "src"
+
+[install]
+library = true
+
+[[executable]]
+name = "shapes-fortran"
+source-dir = "app"
+main = "main.f90"
+
+[[test]]
+name = "check"
+source-dir = "test"
+main = "check.f90"
+
+[dev-dependencies]
+test-drive.git = "https://github.com/fortran-lang/test-drive"
+test-drive.tag = "v0.5.0"

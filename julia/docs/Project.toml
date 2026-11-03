@@ -1,0 +1,9 @@
+[deps]
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+Shapes = "9cf83ea9-bab6-4431-b27d-1ab385d923d4"
+
+[sources]
+Shapes = {path = ".."}
+
+[compat]
+Documenter = "1"

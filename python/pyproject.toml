@@ -1,0 +1,28 @@
+[project]
+name = "shapes-python"
+version = "0.1.0"
+description = "Area and perimeter of plane shapes"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+shapes-python = "shapes.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.6"]
+docs = ["sphinx>=7", "furo>=2024.1"]
+
+[build-system]
+requires = ["uv_build>=0.8,<0.12"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "shapes"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100

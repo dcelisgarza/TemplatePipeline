@@ -1,0 +1,7 @@
+{
+  "entryPoints": ["src/index.ts"],
+  "out": "docs-out",
+  "name": "shapes-typescript",
+  "readme": "none",
+  "tsconfig": "tsconfig.json"
+}

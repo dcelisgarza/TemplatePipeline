@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>shapes-csharp</AssemblyName>
+    <RootNamespace>Shapes.Cli</RootNamespace>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>shapes-csharp</ToolCommandName>
+    <PackageId>shapes-csharp</PackageId>
+    <Description>Print the area and perimeter of a plane shape.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Shapes\Shapes.csproj" />
+  </ItemGroup>
+
+</Project>

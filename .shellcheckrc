@@ -1,0 +1,5 @@
+# The pipeline scripts source scripts/lib.sh, which sets "set -euo pipefail".
+# With "set -e", a failed cd or a failed command substitution stops the script,
+# so SC2164 and SC2155 only add noise. SC1091: the source path is dynamic.
+disable=SC2164,SC2155,SC1091
+external-sources=true

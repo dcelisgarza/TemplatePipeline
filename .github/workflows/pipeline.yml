@@ -1,0 +1,169 @@
+# Build, test, document, package and install each language version on Linux and macOS.
+# The jobs call the same <lang>/pipeline.sh scripts that you run locally.
+#
+#   push to main      -> run the pipeline, then publish the docs to GitHub Pages
+#   pull request      -> run the pipeline
+#   tag v*            -> run the pipeline, then attach the packages and binaries to a GitHub release
+name: pipeline
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+      - name: Lint the shell scripts
+        run: uvx --from shellcheck-py shellcheck scripts/*.sh */pipeline.sh
+      - name: Lint the workflow
+        run: uvx --from actionlint-py actionlint
+      - run: ./scripts/check-versions.sh
+      - name: The tag matches the VERSION file
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: test "${GITHUB_REF_NAME#v}" = "$(cat VERSION)"
+
+  pipeline:
+    needs: check
+    name: ${{ matrix.lang }} (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        lang: [c, cpp, python, rust, julia, fortran, typescript, go, csharp]
+        os: [ubuntu-latest, macos-latest]
+    env:
+      # Docs are the same on each OS, so only Linux builds them.
+      STAGES: ${{ matrix.os == 'ubuntu-latest' && 'all' || 'build test package install' }}
+      # The compiled Julia binary takes minutes to build and is large, so only releases make it.
+      SHAPES_JULIA_BINARY: ${{ startsWith(github.ref, 'refs/tags/v') && '1' || '' }}
+    steps:
+      - uses: actions/checkout@v7
+
+      # Toolchains -------------------------------------------------------------
+      - name: Doxygen
+        if: runner.os == 'Linux' && (matrix.lang == 'c' || matrix.lang == 'cpp')
+        run: sudo apt-get update && sudo apt-get install -y doxygen graphviz
+
+      - uses: astral-sh/setup-uv@v10
+        if: matrix.lang == 'python' || matrix.lang == 'fortran'
+
+      - uses: dtolnay/rust-toolchain@stable
+        if: matrix.lang == 'rust'
+        with:
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+        if: matrix.lang == 'rust'
+        with:
+          workspaces: rust
+
+      - uses: julia-actions/setup-julia@v3
+        if: matrix.lang == 'julia'
+        with:
+          version: "1.12"
+      - uses: julia-actions/cache@v3
+        if: matrix.lang == 'julia'
+
+      - uses: fortran-lang/setup-fortran@v1
+        if: matrix.lang == 'fortran'
+        with:
+          compiler: gcc
+          version: 13
+      - uses: fortran-lang/setup-fpm@v10
+        if: matrix.lang == 'fortran'
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v7
+        if: matrix.lang == 'typescript'
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: typescript/package-lock.json
+
+      - uses: actions/setup-go@v7
+        if: matrix.lang == 'go'
+        with:
+          go-version-file: go/go.mod
+          cache-dependency-path: go/go.mod
+
+      - uses: actions/setup-dotnet@v6
+        if: matrix.lang == 'csharp'
+        with:
+          dotnet-version: 8.0.x
+
+      # Pipeline ---------------------------------------------------------------
+      - name: Run the pipeline
+        run: ./${{ matrix.lang }}/pipeline.sh $STAGES
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dist-${{ matrix.lang }}-${{ matrix.os }}
+          path: dist/${{ matrix.lang }}/
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v7
+        if: runner.os == 'Linux'
+        with:
+          name: site-${{ matrix.lang }}
+          path: site/${{ matrix.lang }}/
+          if-no-files-found: error
+
+  pages:
+    needs: pipeline
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: site-*
+          path: site
+      - name: Rename the docs folders from site-<lang> to <lang>
+        run: |
+          cd site
+          for d in site-*; do mv "$d" "${d#site-}"; done
+      - run: ./scripts/make-site.sh
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+      - id: deploy
+        uses: actions/deploy-pages@v5
+
+  release:
+    needs: pipeline
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: dist-*
+          path: dist
+          merge-multiple: true
+      - name: Make the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ls -l dist
+          gh release create "$GITHUB_REF_NAME" dist/* \
+            --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" --generate-notes

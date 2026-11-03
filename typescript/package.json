@@ -1,0 +1,35 @@
+{
+  "name": "shapes-typescript",
+  "version": "0.1.0",
+  "description": "Area and perimeter of plane shapes (TypeScript version of the shapes program).",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "shapes-typescript": "./dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --test \"test/*.test.ts\"",
+    "docs": "typedoc",
+    "clean": "rm -rf dist docs-out"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typedoc": "^0.28.0",
+    "typescript": "^5.8.0"
+  }
+}

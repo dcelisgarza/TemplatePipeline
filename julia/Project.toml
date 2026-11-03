@@ -1,0 +1,11 @@
+name = "Shapes"
+uuid = "9cf83ea9-bab6-4431-b27d-1ab385d923d4"
+version = "0.1.0"
+
+[deps]
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+
+[compat]
+julia = "1.12"
+
+[apps.shapes-julia]

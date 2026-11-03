@@ -1,0 +1,17 @@
+[package]
+name = "shapes"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.74"
+description = "Area and perimeter of plane shapes, with a small command-line program."
+license = "MIT"
+readme = "README.md"
+publish = false
+
+[lib]
+name = "shapes"
+path = "src/lib.rs"
+
+[[bin]]
+name = "shapes-rust"
+path = "src/main.rs"
