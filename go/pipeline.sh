@@ -27,7 +27,9 @@ stage_docs() {
   need go
   cd "$SRC"
   rm -rf "$DOCS"
-  go run "$DOC2GO" -out "$DOCS" ./...
+  # doc2go needs a newer Go than go.mod. GOTOOLCHAIN=auto lets Go get that toolchain
+  # for this command only. The code itself builds and tests with the go.mod version.
+  GOTOOLCHAIN=auto go run "$DOC2GO" -out "$DOCS" ./...
   [ -f "$DOCS/index.html" ] || die "doc2go did not write $DOCS/index.html"
   publish_docs "$DOCS"
 }

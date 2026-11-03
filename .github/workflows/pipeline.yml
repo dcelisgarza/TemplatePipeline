@@ -25,9 +25,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@v10.3.3
       - name: Lint the shell scripts
-        run: uvx --from shellcheck-py shellcheck scripts/*.sh */pipeline.sh
+        run: uvx --from shellcheck-py shellcheck ./scripts/*.sh ./*/pipeline.sh
       - name: Lint the workflow
         run: uvx --from actionlint-py actionlint
       - run: ./scripts/check-versions.sh
@@ -57,7 +57,7 @@ jobs:
         if: runner.os == 'Linux' && (matrix.lang == 'c' || matrix.lang == 'cpp')
         run: sudo apt-get update && sudo apt-get install -y doxygen graphviz
 
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@v10.3.3
         if: matrix.lang == 'python' || matrix.lang == 'fortran'
 
       - uses: dtolnay/rust-toolchain@stable
@@ -81,10 +81,13 @@ jobs:
         with:
           compiler: gcc
           version: 13
-      - uses: fortran-lang/setup-fpm@v10
+      # The fpm wheels on PyPI work on Linux and macOS. The setup-fpm binary for macOS
+      # needs the libgfortran of Homebrew gcc@12, which the runner does not have.
+      - name: fpm
         if: matrix.lang == 'fortran'
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          uv tool install fpm==0.12.0
+          uv tool dir --bin >> "$GITHUB_PATH"
 
       - uses: actions/setup-node@v7
         if: matrix.lang == 'typescript'
@@ -106,7 +109,10 @@ jobs:
 
       # Pipeline ---------------------------------------------------------------
       - name: Run the pipeline
-        run: ./${{ matrix.lang }}/pipeline.sh $STAGES
+        # STAGES is a list of stage names, so the word split is intended.
+        run: |
+          # shellcheck disable=SC2086
+          ./${{ matrix.lang }}/pipeline.sh $STAGES
 
       - uses: actions/upload-artifact@v7
         with:
@@ -122,7 +128,7 @@ jobs:
 
   pages:
     needs: pipeline
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     permissions:
       pages: write
