@@ -16,6 +16,9 @@ stage_build() {
 
 stage_test() {
   cd "$SRC"
+  local unformatted
+  unformatted="$(gofmt -l .)"
+  [ -z "$unformatted" ] || die "gofmt must format these files: $unformatted"
   go vet ./...
   go test ./...
 }

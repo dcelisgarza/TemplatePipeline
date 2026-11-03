@@ -80,20 +80,20 @@ func checkPositive(dims ...float64) error {
 
 type circle struct{ radius float64 }
 
-func (circle) Name() string { return "circle" }
-func (c circle) Area() float64 { return math.Pi * c.radius * c.radius }
+func (circle) Name() string         { return "circle" }
+func (c circle) Area() float64      { return math.Pi * c.radius * c.radius }
 func (c circle) Perimeter() float64 { return 2 * math.Pi * c.radius }
 
 type rectangle struct{ width, height float64 }
 
-func (rectangle) Name() string { return "rectangle" }
-func (r rectangle) Area() float64 { return r.width * r.height }
+func (rectangle) Name() string         { return "rectangle" }
+func (r rectangle) Area() float64      { return r.width * r.height }
 func (r rectangle) Perimeter() float64 { return 2 * (r.width + r.height) }
 
 type square struct{ side float64 }
 
-func (square) Name() string { return "square" }
-func (s square) Area() float64 { return s.side * s.side }
+func (square) Name() string         { return "square" }
+func (s square) Area() float64      { return s.side * s.side }
 func (s square) Perimeter() float64 { return 4 * s.side }
 
 type triangle struct{ a, b, c float64 }

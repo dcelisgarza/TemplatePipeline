@@ -26,6 +26,7 @@ stage_build() {
 }
 
 stage_test() {
+  dotnet format "$SLN" --verify-no-changes
   dotnet test "$SLN" -c Release --no-build
 }
 
